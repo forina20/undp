@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Fiji Villages</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+<div id="map" style="height:800px;"></div>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" type="d29eb1b40059d783fb96516d-text/javascript"></script>
+<script src="https://unpkg.com/leaflet.markercluster/dist/leaflet.markercluster.js" type="d29eb1b40059d783fb96516d-text/javascript"></script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.css"/>
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.Default.css"/>
+
+<script type="d29eb1b40059d783fb96516d-text/javascript">
+const map = L.map('map').setView([-17.828467, 177.976565], 10);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+
+const cluster = L.markerClusterGroup();
+const villageIcon = L.icon({
+  iconUrl: 'https://storage.googleapis.com/orbital.co.ke/icons/undp-yellow.png',
+  iconSize: [33, 35],
+  iconAnchor: [15, 30],
+  popupAnchor: [0, -28]
+});
+
+// Fetch Villages Layer
+fetch('https://orbitalafrica.com/undp/apis/get-village.php?api-key=114e343abcb99512cf436c0523ff005e9d6d6cc782e515a1da5e15546a0fa7d9')
+  .then(r => r.json())
+  .then(data => {
+    console.log('Features:', data.features.length);
+    const layer = L.geoJSON(data, {
+      pointToLayer: (feature, latlng) =>
+        L.marker(latlng, { icon: villageIcon })
+         .bindPopup(`<b>${feature.properties.Village}</b><br>${feature.properties.Tikina}`)
+    });
+    cluster.addLayer(layer);
+    map.addLayer(cluster);
+  });
+  
+// Fetch Tikina Layer
+fetch('https://orbitalafrica.com/undp/apis/get-tikina.php?action=tikina_list')
+  .then(res => res.json())
+  .then(data => {
+    const tikinaLayer = L.geoJSON(data, {
+      style: {
+        color: "#98cb00",
+        weight: 2,
+        fillOpacity: 0
+      },
+      onEachFeature: (feature, layer) => {
+        const props = feature.properties;
+        layer.bindPopup(
+          `<strong>Tikina:</strong> ${props.ADM3_NAME}<br>
+           <strong>Province:</strong> ${props.ADM2_NAME}`
+        );
+      }
+    });
+    map.addLayer(tikinaLayer);
+  });
+</script>
+<script src="/cdn-cgi/scripts/7d0fa10a/cloudflare-static/rocket-loader.min.js" data-cf-settings="d29eb1b40059d783fb96516d-|49" defer></script><script defer src="https://static.cloudflareinsights.com/beacon.min.js/vcd15cbe7772f49c399c6a5babf22c1241717689176015" integrity="sha512-ZpsOmlRQV6y907TI0dKBHq9Md29nnaEIPlkf84rnaERnq6zvWvPUqr2ft8M1aS28oN72PdrCzSjY4U6VaAw1EQ==" data-cf-beacon='{"version":"2024.11.0","token":"a2207557ec6246f38d9c7e0dabdb883d","r":1,"server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
+</body>
+</html>
